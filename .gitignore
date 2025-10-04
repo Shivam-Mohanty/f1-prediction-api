@@ -1,0 +1,11 @@
+# Python virtual environment
+f1_env/
+
+# FastF1 cache
+fastf1_cache/
+
+# Python cache
+__pycache__/
+
+# CSV Data files
+*.csv
