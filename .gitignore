@@ -9,3 +9,4 @@ __pycache__/
 
 # CSV Data files
 *.csv
+!f1_ml_ready_data.csv
