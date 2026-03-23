@@ -1,7 +1,7 @@
 import pandas as pd
 import xgboost as xgb
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.metrics import accuracy_score, classification_report, roc_auc_score
 
 def train_model(data_path='f1_ml_ready_data.csv'):
     """
@@ -68,9 +68,12 @@ def train_model(data_path='f1_ml_ready_data.csv'):
     # --- Model Evaluation ---
     print("\nEvaluating model performance...")
     y_pred = model.predict(X_test)
+    y_prob = model.predict_proba(X_test)[:, 1] # Probabilities of class 1 (Winner)
     
     accuracy = accuracy_score(y_test, y_pred)
+    roc_auc = roc_auc_score(y_test, y_prob)
     print(f"Model Accuracy on Test Set: {accuracy * 100:.2f}%")
+    print(f"Model ROC-AUC Score: {roc_auc:.4f}")
     
     # The classification report gives us more details like precision and recall.
     # It will be heavily skewed because of the imbalance, but it's good to see.

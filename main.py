@@ -1,8 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
 import xgboost as xgb
 import fastf1 as ff1
+import os
 
 # --- App Initialization ---
 app = FastAPI()
@@ -28,7 +29,13 @@ model.load_model(MODEL_PATH)
 DATA_PATH = 'f1_ml_ready_data.csv'
 historical_data = pd.read_csv(DATA_PATH)
 
+# Precompute the most recent form for each driver for O(1) lookups
+latest_driver_stats = {}
+for driver_id in historical_data['driverId'].unique():
+    latest_driver_stats[driver_id] = historical_data[historical_data['driverId'] == driver_id].sort_values(by='season', ascending=False).iloc[0]
+
 # Enable FastF1 cache
+os.makedirs('fastf1_cache', exist_ok=True)
 ff1.Cache.enable_cache('fastf1_cache')
 
 
@@ -54,11 +61,14 @@ async def predict_winner(year: int, race_name: str):
         
         # --- Step 2: Prepare the feature set for every driver on the grid ---
         prediction_features = []
+        processed_driver_ids = []
         driver_ids = qualifying_results['Abbreviation'].unique()
 
         for driver_id in driver_ids:
-            # Find the most recent data for this driver from our historical dataset
-            driver_historical = historical_data[historical_data['driverId'] == driver_id].sort_values(by='season', ascending=False).iloc[0]
+            # Use precomputed historical data or skip if new driver
+            if driver_id not in latest_driver_stats:
+                continue
+            driver_historical = latest_driver_stats[driver_id]
             
             # Get the grid position from the new qualifying data
             grid_pos = qualifying_results[qualifying_results['Abbreviation'] == driver_id]['Position'].iloc[0]
@@ -73,8 +83,12 @@ async def predict_winner(year: int, race_name: str):
             }
             
             prediction_features.append(features)
+            processed_driver_ids.append(driver_id)
 
         # --- Step 3: Make Predictions ---
+        if not prediction_features:
+            raise ValueError("No historical data found for the current grid drivers.")
+
         df_predict = pd.DataFrame(prediction_features)
         
         # Use predict_proba to get the probability of winning (class 1)
@@ -82,7 +96,7 @@ async def predict_winner(year: int, race_name: str):
         
         # --- Step 4: Format the Output ---
         results = []
-        for i, driver_id in enumerate(driver_ids):
+        for i, driver_id in enumerate(processed_driver_ids):
             results.append({
                 'driver': driver_id,
                 'win_probability': round(float(win_probabilities[i]), 4)
@@ -94,7 +108,7 @@ async def predict_winner(year: int, race_name: str):
         return {"prediction": results[:3]} # Return the top 3
 
     except Exception as e:
-        return {"error": f"Could not process the request: {e}"}
+        raise HTTPException(status_code=500, detail=f"Could not process the request: {e}")
 
 @app.get("/schedule/{year}")
 async def get_schedule(year: int):
@@ -106,4 +120,4 @@ async def get_schedule(year: int):
         races = schedule[['EventName', 'Location']].to_dict(orient='records')
         return {"schedule": races}
     except Exception as e:
-        return {"error": f"Could not fetch schedule: {e}"}
+        raise HTTPException(status_code=500, detail=f"Could not fetch schedule: {e}")

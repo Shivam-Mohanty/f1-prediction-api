@@ -1,6 +1,7 @@
 import pandas as pd
 import fastf1 as ff1
 import time
+import os
 
 def get_f1_data(start_year, end_year):
     """
@@ -16,6 +17,7 @@ def get_f1_data(start_year, end_year):
     all_results = []
     
     # Enable the cache to speed up subsequent runs
+    os.makedirs('fastf1_cache', exist_ok=True)
     ff1.Cache.enable_cache('fastf1_cache') 
     
     print(f"Fetching data from {start_year} to {end_year}...")

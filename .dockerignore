@@ -1,0 +1,5 @@
+__pycache__/
+fastf1_cache/
+*.pyc
+.env
+.git/

@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+pandas
+xgboost
+fastf1
+scikit-learn
+pydantic
