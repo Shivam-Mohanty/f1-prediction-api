@@ -5,3 +5,5 @@ xgboost
 fastf1
 scikit-learn
 pydantic
+pytest
+httpx

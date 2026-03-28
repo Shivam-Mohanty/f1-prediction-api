@@ -3,3 +3,11 @@ fastf1_cache/
 *.pyc
 .env
 .git/
+
+# Development and training scripts are not needed in the production API container
+data_fetcher.py
+feature_engineering.py
+model_trainer.py
+
+# Exclude raw data (only the ML-ready CSV is needed)
+f1_fastf1_data.csv

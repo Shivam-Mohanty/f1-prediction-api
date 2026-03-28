@@ -5,8 +5,11 @@ import xgboost as xgb
 import fastf1 as ff1
 import os
 
-# --- App Initialization ---
 app = FastAPI()
+
+@app.get("/")
+def home():
+    return {"status": "F1 Predictor API is online", "version": "2.0"}
 
 # --- CORS Middleware ---
 # This allows our React frontend (running on a different port) to communicate with this backend.
