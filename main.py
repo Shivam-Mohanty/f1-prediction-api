@@ -12,13 +12,21 @@ def home():
     return {"status": "F1 Predictor API is online", "version": "2.0"}
 
 # --- CORS Middleware ---
-# This allows our React frontend (running on a different port) to communicate with this backend.
+# Make sure to import CORSMiddleware at the top of your file if you haven't:
+# from fastapi.middleware.cors import CORSMiddleware
+
+origins = [
+    "http://localhost:3000", # For your local React/Next.js frontend testing
+    "http://localhost:5173", # For your local Vite frontend testing (if using Vite)
+    "https://f1-prediction-frontend.vercel.app", # REPLACE THIS with your actual Vercel URL
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins
+    allow_origins=origins, # Use the specific list instead of ["*"]
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods
-    allow_headers=["*"],  # Allows all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
